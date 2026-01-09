@@ -1,0 +1,39 @@
+languageCode = 'en-us'
+title = 'GxbNt Notes'
+theme = 'archie'
+
+pygmentsstyle = "monokai"
+pygmentscodefences = true
+pygmentscodefencesguesssyntax = true
+
+pagination.pagerSize=10 # articles per page
+
+[params]
+	mode="auto" # color-mode → light,dark or auto
+	featherIconsCDN=true
+	subtitle = "GxbNt Notes."
+
+# Social Tags
+
+[[params.social]]
+name = "GitHub"
+icon = "github"
+url = "https://github.com/GxbNt"
+
+[[params.social]]
+name = "Twitter"
+icon = "twitter"
+url = "https://twitter.com/GxbNt0x01"
+
+# Main menu Items
+
+[[menu.main]]
+name = "Home"
+url = "/"
+weight = 1
+
+[[menu.main]]
+name = "All posts"
+url = "/posts"
+weight = 2
+

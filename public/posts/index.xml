@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Slonser Notes</title>
+    <link>//localhost:1313/posts/</link>
+    <description>Recent content in Posts on Slonser Notes</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 07 Jan 2026 00:00:00 +0300</lastBuildDate>
+    <atom:link href="//localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Never Trust the Output: Data Pollution in AI Agents and MCP</title>
+      <link>//localhost:1313/posts/smugglle-ai-ouputs/</link>
+      <pubDate>Wed, 07 Jan 2026 00:00:00 +0300</pubDate>
+      <guid>//localhost:1313/posts/smugglle-ai-ouputs/</guid>
+      <description>&lt;blockquote&gt;&#xA;&lt;p&gt;&lt;strong&gt;Disclaimer:&lt;/strong&gt; This article is intended for educational purposes and security specialists conducting authorized testing. The author assumes no responsibility for any misuse of the information provided. Distribution of malicious software, system disruption, and privacy violations are punishable by law.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;I&amp;rsquo;m sure most of you are already familiar with the concept of &lt;strong&gt;Prompt Injection&lt;/strong&gt; and its various consequences. However, in 2026, any AI model without MCP (Model Context Protocol) servers can&amp;rsquo;t reach its full potential — that&amp;rsquo;s why developers are connecting numerous MCP servers to extend their capabilities.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Make Self-XSS Great Again</title>
+      <link>//localhost:1313/posts/make-self-xss-great-again/</link>
+      <pubDate>Fri, 13 Jun 2025 00:00:00 +0300</pubDate>
+      <guid>//localhost:1313/posts/make-self-xss-great-again/</guid>
+      <description>&lt;blockquote&gt;&#xA;&lt;p&gt;&lt;strong&gt;Disclaimer&lt;/strong&gt;: This article is intended for security professionals conducting authorized testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;Many security researchers are familiar with the frustrating experience of discovering an XSS vulnerability that requires complex actions within an account, effectively making it only reproducible on the attacker&amp;rsquo;s account and thus losing its practical value. Many bug bounty hunters have likely received responses like this from triage teams:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Why Protocol Matters: Evil PWA Attack on Casdoor</title>
+      <link>//localhost:1313/posts/why-protocol-matters/</link>
+      <pubDate>Wed, 05 Feb 2025 00:00:00 +0300</pubDate>
+      <guid>//localhost:1313/posts/why-protocol-matters/</guid>
+      <description>&lt;blockquote&gt;&#xA;&lt;p&gt;The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;In this article, I would like to discuss a vulnerability I discovered in &lt;a href=&#34;https://github.com/casdoor/casdoor&#34;&gt;Casdoor&lt;/a&gt;, starting with a brief overview:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>DOM Purify - dirty namespace bypass</title>
+      <link>//localhost:1313/posts/dompurify-dirty-namespace-bypass/</link>
+      <pubDate>Mon, 09 Dec 2024 00:00:00 +0300</pubDate>
+      <guid>//localhost:1313/posts/dompurify-dirty-namespace-bypass/</guid>
+      <description>&lt;blockquote&gt;&#xA;&lt;p&gt;The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;In this article, I want to talk about a method for bypassing DOMPurify when it is used for sanitizing SVG files, which I recently discovered.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Old new email attacks</title>
+      <link>//localhost:1313/posts/email-attacks/</link>
+      <pubDate>Thu, 23 May 2024 15:00:00 +0300</pubDate>
+      <guid>//localhost:1313/posts/email-attacks/</guid>
+      <description>&lt;blockquote&gt;&#xA;&lt;p&gt;The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;This article will be dedicated to my research in the field of email service attacks, including all aspects related to email messages.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Exploring IPv6 Zone Identifier</title>
+      <link>//localhost:1313/posts/ipv6-zones/</link>
+      <pubDate>Sat, 06 Apr 2024 15:00:00 +0300</pubDate>
+      <guid>//localhost:1313/posts/ipv6-zones/</guid>
+      <description>&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;This article is dedicated to a series of tricks utilizing the modern capabilities of IPv6 and the shortcomings of address parser implementations in standard libraries of popular programming languages.&lt;/p&gt;&#xA;&lt;h1 id=&#34;ipv6-zone&#34;&gt;IPv6 Zone&lt;/h1&gt;&#xA;&lt;p&gt;I think many people have an idea of what IPv6 and IPv4 addresses look like:&lt;/p&gt;&#xA;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;2001:0db8:85a3:0000:0000:8a2e:0370:7334 - IPv6&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;192.168.0.1 - IPv4&#xA;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When including an IPv6 address in a URL, it needs to be enclosed in square brackets []:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>MySQL2: Dangers of User-Defined Database Connections</title>
+      <link>//localhost:1313/posts/mysql2-attacker-configuration/</link>
+      <pubDate>Tue, 26 Mar 2024 00:00:00 +0300</pubDate>
+      <guid>//localhost:1313/posts/mysql2-attacker-configuration/</guid>
+      <description>&lt;blockquote&gt;&#xA;&lt;p&gt;The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;The node-mysql2 library is one of the most popular libraries for connecting to a database in JavaScript, with over 2 million installations per week.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>DOM Purify - untrusted Node bypass</title>
+      <link>//localhost:1313/posts/dompurify-node-type-confusion/</link>
+      <pubDate>Tue, 19 Mar 2024 00:00:00 +0300</pubDate>
+      <guid>//localhost:1313/posts/dompurify-node-type-confusion/</guid>
+      <description>&lt;blockquote&gt;&#xA;&lt;p&gt;The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;In this article, I aim to elucidate a deficiency in the implementation of DOMPurify that I recently uncovered. While it may not pertain to the most common use cases of this library, I found it to be a compelling discovery worthy of exploration.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>CVE-2023-5480: Chrome new XSS Vector</title>
+      <link>//localhost:1313/posts/cve-2023-5480/</link>
+      <pubDate>Thu, 25 Jan 2024 20:00:00 +0300</pubDate>
+      <guid>//localhost:1313/posts/cve-2023-5480/</guid>
+      <description>&lt;h1 id=&#34;chrome-xss&#34;&gt;Chrome XSS&lt;/h1&gt;&#xA;&lt;blockquote&gt;&#xA;&lt;p&gt;The article is informative and intended for security specialists conducting testing within the scope of a contract. The author is not responsible for any damage caused by the application of the provided information. The distribution of malicious programs, disruption of system operation, and violation of the confidentiality of correspondence are pursued by law.&lt;/p&gt;&#xA;&lt;/blockquote&gt;&#xA;&lt;p&gt;&lt;img src=&#34;./logo.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;&#xA;&lt;h1 id=&#34;preface&#34;&gt;Preface&lt;/h1&gt;&#xA;&lt;p&gt;This article is dedicated to a vulnerability that I managed to discover in the Google Chrome browser at the end of last year, and it also recounts the story of its origin. The vulnerability persisted for an extended period and was addressed on October 31, 2023.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Who Am I</title>
+      <link>//localhost:1313/posts/who-am-i/</link>
+      <pubDate>Thu, 25 Jan 2024 04:39:37 +0300</pubDate>
+      <guid>//localhost:1313/posts/who-am-i/</guid>
+      <description>&lt;h2 id=&#34;slonser&#34;&gt;Slonser.&lt;/h2&gt;&#xA;&lt;p&gt;I am Vsevolod Kokorin (Slonser), security researcher at &lt;a href=&#34;https://solidlab.ru&#34;&gt;Solidlab&lt;/a&gt;, &lt;a href=&#34;https://ctftime.org/team/83435/&#34;&gt;C4T BuT S4D&lt;/a&gt; CTF team player. You can contact with me at &lt;a href=&#34;https://t.me/slonser&#34;&gt;Telegram&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
