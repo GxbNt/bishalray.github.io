@@ -11,7 +11,7 @@ pagination.pagerSize=10 # articles per page
 [params]
 	mode="auto" # color-mode → light,dark or auto
 	featherIconsCDN=true
-	subtitle = "GxbNt Notes."
+	subtitle = "GxbNt Notes"
 
 # Social Tags
 
@@ -25,6 +25,12 @@ name = "Twitter"
 icon = "twitter"
 url = "https://twitter.com/GxbNt0x01"
 
+[[params.social]]
+name = "Linkedin"
+icon = "linkedin"
+icon_pack = "fab"
+url = "https://www.linkedin.com/in/gxbnt/"
+
 # Main menu Items
 
 [[menu.main]]
@@ -36,4 +42,9 @@ weight = 1
 name = "All posts"
 url = "/posts"
 weight = 2
+
+[[menu.main]]
+name = "About"
+url = "/posts/who-am-i/"
+weight = 3
 
