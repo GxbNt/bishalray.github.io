@@ -2,44 +2,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>//localhost:1313/posts/smugglle-ai-ouputs/</loc>
-    <lastmod>2026-01-07T00:00:00+03:00</lastmod>
+    <loc>http://localhost:1313/posts/who-am-i/</loc>
   </url><url>
-    <loc>//localhost:1313/posts/</loc>
-    <lastmod>2026-01-07T00:00:00+03:00</lastmod>
+    <loc>http://localhost:1313/categories/</loc>
   </url><url>
-    <loc>//localhost:1313/</loc>
-    <lastmod>2026-01-07T00:00:00+03:00</lastmod>
+    <loc>http://localhost:1313/</loc>
   </url><url>
-    <loc>//localhost:1313/posts/make-self-xss-great-again/</loc>
-    <lastmod>2025-06-13T00:00:00+03:00</lastmod>
+    <loc>http://localhost:1313/posts/</loc>
   </url><url>
-    <loc>//localhost:1313/posts/why-protocol-matters/</loc>
-    <lastmod>2025-02-05T00:00:00+03:00</lastmod>
-  </url><url>
-    <loc>//localhost:1313/posts/dompurify-dirty-namespace-bypass/</loc>
-    <lastmod>2024-12-09T00:00:00+03:00</lastmod>
-  </url><url>
-    <loc>//localhost:1313/posts/email-attacks/</loc>
-    <lastmod>2024-05-23T15:00:00+03:00</lastmod>
-  </url><url>
-    <loc>//localhost:1313/posts/ipv6-zones/</loc>
-    <lastmod>2024-04-06T15:00:00+03:00</lastmod>
-  </url><url>
-    <loc>//localhost:1313/posts/mysql2-attacker-configuration/</loc>
-    <lastmod>2024-03-26T00:00:00+03:00</lastmod>
-  </url><url>
-    <loc>//localhost:1313/posts/dompurify-node-type-confusion/</loc>
-    <lastmod>2024-03-19T00:00:00+03:00</lastmod>
-  </url><url>
-    <loc>//localhost:1313/posts/cve-2023-5480/</loc>
-    <lastmod>2024-01-25T20:00:00+03:00</lastmod>
-  </url><url>
-    <loc>//localhost:1313/posts/who-am-i/</loc>
-    <lastmod>2024-01-25T04:39:37+03:00</lastmod>
-  </url><url>
-    <loc>//localhost:1313/categories/</loc>
-  </url><url>
-    <loc>//localhost:1313/tags/</loc>
+    <loc>http://localhost:1313/tags/</loc>
   </url>
 </urlset>

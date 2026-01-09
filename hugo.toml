@@ -12,7 +12,6 @@ pagination.pagerSize=10 # articles per page
 [params]
 	mode="auto" # color-mode → light,dark or auto
 	featherIconsCDN=true
-	subtitle = "GxbNt Notes"
 
 # Social Tags
 
@@ -40,7 +39,7 @@ url = "/"
 weight = 1
 
 [[menu.main]]
-name = "All posts"
+name = "Posts"
 url = "/posts"
 weight = 2
 
