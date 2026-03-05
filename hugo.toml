@@ -8,10 +8,12 @@ pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 
 pagination.pagerSize=10 # articles per page
+disableKinds = ["taxonomy", "term"]
 
 [params]
 	mode="auto" # color-mode → light,dark or auto
-	featherIconsCDN=true
+	subtitle = "GxbNt Notes."
+	mainSections = ["posts"]
 
 # Social Tags
 
@@ -39,7 +41,7 @@ url = "/"
 weight = 1
 
 [[menu.main]]
-name = "Posts"
+name = "All posts"
 url = "/posts"
 weight = 2
 
@@ -47,4 +49,3 @@ weight = 2
 name = "About"
 url = "/posts/who-am-i/"
 weight = 3
-
