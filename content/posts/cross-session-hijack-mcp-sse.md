@@ -72,7 +72,7 @@ async connect(transport) {
 Connection entrypoint (simplified):
 
 ```js
-app.get('/revenuecat-sse', async (req, res) => {
+app.get('/example-sse', async (req, res) => {
   const transport = createTransport(req, res);
   await server.connect(transport);
 });
