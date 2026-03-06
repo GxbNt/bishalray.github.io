@@ -1,6 +1,6 @@
 ---
 title: "Who Am I"
-date: 2026-03-5T00:00:00+00:00
+date: 2026-03-05T00:00:00+00:00
 draft: false
 summary: "I am Bishal (GxbNt), and I do security research."
 ---
