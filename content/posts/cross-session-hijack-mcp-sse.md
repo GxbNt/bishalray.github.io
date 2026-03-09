@@ -21,7 +21,6 @@ That is where things went wrong.
 
 The server processed requests from one session but delivered responses to another session if that session connected later. In practice, whoever connected last could become the receiver for someone else's responses.
 
-This was not a generic localhost concern. It was a session routing flaw between authenticated sessions.
 
 ## The Problem
 
